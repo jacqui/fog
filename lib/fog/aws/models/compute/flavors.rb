@@ -24,7 +24,10 @@ module Fog
 
         { :bits => 64, :cores => 33.5, :disk => 1690, :id => 'cc1.4xlarge', :name => 'Cluster Compute Quadruple Extra Large', :ram => 23552},
         { :bits => 64, :cores =>   88, :disk => 3370, :id => 'cc2.8xlarge', :name => 'Cluster Compute Eight Extra Large',     :ram => 61952},
-        { :bits => 64, :cores => 33.5, :disk => 1690, :id => 'cg1.4xlarge', :name => 'Cluster GPU Quadruple Extra Large',     :ram => 22528}
+        { :bits => 64, :cores => 33.5, :disk => 1690, :id => 'cg1.4xlarge', :name => 'Cluster GPU Quadruple Extra Large',     :ram => 22528},
+
+        { :bits => 64, :cores =>   13,  :disk => 1690, :id =>  'm3.xlarge',  :name => 'Second Generation Extra Large Instance', :ram => 15360},
+        { :bits => 64, :cores =>   26,  :disk => 1690, :id =>  'm3.2xlarge',  :name => 'Second Generation Double Extra Large Instance', :ram => 30720}
       ]
 
       class Flavors < Fog::Collection
