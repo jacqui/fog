@@ -89,6 +89,7 @@ module Fog
               :users => Hash.new do |uhash, ukey|
                 uhash[ukey] = {
                   :user_id     => Fog::AWS::Mock.key_id,
+                  :path        => '/',
                   :arn         => "arn:aws:iam::#{Fog::AWS::Mock.owner_id}:user/#{ukey}",
                   :access_keys => [],
                   :policies    => {}
@@ -204,7 +205,7 @@ module Fog
             :parser     => parser
           })
         rescue Excon::Errors::HTTPStatusError => error
-          if match = error.message.match(/<Code>(.*)<\/Code>(?:.*<Message>(.*)<\/Message>)?/m)
+          if match = error.message.match(/(?:.*<Code>(.*)<\/Code>)(?:.*<Message>(.*)<\/Message>)/m)
             case match[1]
             when 'CertificateNotFound', 'NoSuchEntity'
               raise Fog::AWS::IAM::NotFound.slurp(error, match[2])

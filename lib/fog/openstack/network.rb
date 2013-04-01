@@ -6,8 +6,8 @@ module Fog
 
       requires :openstack_auth_url
       recognizes :openstack_auth_token, :openstack_management_url, :persistent,
-                 :openstack_service_name, :openstack_tenant,
-                 :openstack_api_key, :openstack_username,
+                 :openstack_service_type, :openstack_service_name, :openstack_tenant,
+                 :openstack_api_key, :openstack_username, :openstack_endpoint_type,
                  :current_user, :current_tenant
 
       ## MODELS
@@ -19,6 +19,10 @@ module Fog
       collection  :ports
       model       :subnet
       collection  :subnets
+      model       :floating_ip
+      collection  :floating_ips
+      model       :router
+      collection  :routers
 
       ## REQUESTS
       #
@@ -45,6 +49,23 @@ module Fog
       request :get_subnet
       request :update_subnet
 
+      # FloatingIp CRUD
+      request :list_floating_ips
+      request :create_floating_ip
+      request :delete_floating_ip
+      request :get_floating_ip
+      request :associate_floating_ip
+      request :disassociate_floating_ip
+
+      # Router CRUD
+      request :list_routers
+      request :create_router
+      request :delete_router
+      request :get_router
+      request :update_router
+      request :add_router_interface
+      request :remove_router_interface
+
       # Tenant
       request :set_tenant
 
@@ -55,6 +76,8 @@ module Fog
               :networks => {},
               :ports => {},
               :subnets => {},
+              :floating_ips => {},
+              :routers => {},
             }
           end
         end
@@ -107,7 +130,9 @@ module Fog
           @openstack_auth_uri             = URI.parse(options[:openstack_auth_url])
           @openstack_management_url       = options[:openstack_management_url]
           @openstack_must_reauthenticate  = false
-          @openstack_service_name         = options[:openstack_service_name] || ['network']
+          @openstack_service_type         = options[:openstack_service_type] || ['network']
+          @openstack_service_name         = options[:openstack_service_name]
+          @openstack_endpoint_type        = options[:openstack_endpoint_type] || 'adminURL'
 
           @connection_options = options[:connection_options] || {}
 
@@ -178,8 +203,9 @@ module Fog
               :openstack_username => @openstack_username,
               :openstack_auth_uri => @openstack_auth_uri,
               :openstack_auth_token => @openstack_auth_token,
+              :openstack_service_type => @openstack_service_type,
               :openstack_service_name => @openstack_service_name,
-              :openstack_endpoint_type => 'adminURL'
+              :openstack_endpoint_type => @openstack_endpoint_type
             }
 
             credentials = Fog::OpenStack.authenticate_v2(options, @connection_options)

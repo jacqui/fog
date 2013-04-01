@@ -2,7 +2,7 @@ Shindo.tests('Fog::Compute[:aws] | image requests', ['aws']) do
   @describe_images_format = {
     'imagesSet'    => [{
       'architecture'        => String,
-      'blockDeviceMapping'  => [],
+      'blockDeviceMapping'  => [Fog::Nullable::Hash],
       'description'         => Fog::Nullable::String,
       'hypervisor'          => String,
       'imageId'             => String,
@@ -71,6 +71,14 @@ Shindo.tests('Fog::Compute[:aws] | image requests', ['aws']) do
 
       tests("#register_image").formats(@register_image_format) do
         @image = Fog::Compute[:aws].register_image('image', 'image', '/dev/sda1').body
+      end
+
+      tests("#register_image - with ebs block device mapping").formats(@register_image_format) do
+        @ebs_image = Fog::Compute[:aws].register_image('image', 'image', '/dev/sda1', [ { 'DeviceName' => '/dev/sdh', "SnapshotId" => "snap-123456789", "VolumeSize" => "10G", "DeleteOnTermination" => true}]).body
+      end
+
+      tests("#register_image - with ephemeral block device mapping").formats(@register_image_format) do
+        @ephemeral_image = Fog::Compute[:aws].register_image('image', 'image', '/dev/sda1', [ { 'VirtualName' => 'ephemeral0', "DeviceName" => "/dev/sdb"} ]).body
       end
 
       @image_id = @image['imageId']

@@ -3,6 +3,7 @@ require 'fog/aws/credential_fetcher'
 require 'fog/aws/signaturev4'
 module Fog
   module AWS
+    COMPLIANT_BUCKET_NAMES = /^(?:[a-z]|\d(?!\d{0,2}(?:\.\d{1,3}){3}$))(?:[a-z0-9]|\-(?![\.])){1,61}[a-z0-9]$/
 
     extend Fog::Provider
 
@@ -12,6 +13,7 @@ module Fog
     service(:compute,         'aws/compute',          'Compute')
     service(:cloud_formation, 'aws/cloud_formation',  'CloudFormation')
     service(:cloud_watch,     'aws/cloud_watch',      'CloudWatch')
+    service(:data_pipeline,   'aws/data_pipeline',     'DataPipeline')
     service(:dynamodb,        'aws/dynamodb',         'DynamoDB')
     service(:dns,             'aws/dns',              'DNS')
     service(:elasticache,     'aws/elasticache',      'Elasticache')

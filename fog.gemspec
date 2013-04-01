@@ -6,10 +6,9 @@ Gem::Specification.new do |s|
   ## If your rubyforge_project name is different, then edit it and comment out
   ## the sub! line in the Rakefile
   s.name              = 'fog'
-  s.version           = '1.6.0'
-  s.date              = '2012-09-15'
+  s.version           = '1.10.0'
+  s.date              = '2013-03-05'
   s.rubyforge_project = 'fog'
-
 
   ## Make sure your summary is short. The description may be as long
   ## as you like.
@@ -42,11 +41,11 @@ Gem::Specification.new do |s|
   ## List your runtime dependencies here. Runtime dependencies are those
   ## that are needed for an end user to actually USE your code.
   s.add_dependency('builder')
-  s.add_dependency('excon', '~>0.14')
+  s.add_dependency('excon', '~>0.20')
   s.add_dependency('formatador', '~>0.2.0')
   s.add_dependency('multi_json', '~>1.0')
   s.add_dependency('mime-types')
-  s.add_dependency('net-scp', '~>1.0.4')
+  s.add_dependency('net-scp', '~>1.1')
   s.add_dependency('net-ssh', '>=2.1.3')
   s.add_dependency('nokogiri', '~>1.5.0')
   s.add_dependency('ruby-hmac')
@@ -56,12 +55,11 @@ Gem::Specification.new do |s|
   s.add_development_dependency('jekyll')
   s.add_development_dependency('rake')
   s.add_development_dependency('rbvmomi')
-  s.add_development_dependency('rdoc')
+  s.add_development_dependency('yard')
   s.add_development_dependency('thor')
   s.add_development_dependency('rspec', '~>1.3.1')
   s.add_development_dependency('rbovirt', '>=0.0.11')
   s.add_development_dependency('shindo', '~>0.3.4')
-  s.add_development_dependency('virtualbox', '~>0.9.1')
   s.add_development_dependency('fission')
   s.add_development_dependency('pry')
 #  s.add_development_dependency('ruby-libvirt','~>0.4.0')

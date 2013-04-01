@@ -151,7 +151,7 @@ module Fog
               :parser     => parser
             })
           rescue Excon::Errors::HTTPStatusError => error
-            if match = error.message.match(/<Code>(.*)<\/Code>.*<Message>(.*)<\/Message>/)
+            if match = error.message.match(/(?:.*<Code>(.*)<\/Code>)(?:.*<Message>(.*)<\/Message>)/m)
               case match[1]
               when 'AlreadyExists'
                 #raise Fog::AWS::AutoScaling::IdentifierTaken.new(match[2])
@@ -258,7 +258,7 @@ module Fog
           setup_credentials(options)
           @region = options[:region] || 'us-east-1'
 
-          unless ['ap-northeast-1', 'ap-southeast-1', 'eu-west-1', 'sa-east-1', 'us-east-1', 'us-west-1', 'us-west-2'].include?(@region)
+          unless ['ap-northeast-1', 'ap-southeast-1', 'ap-southeast-2', 'eu-west-1', 'sa-east-1', 'us-east-1', 'us-west-1', 'us-west-2'].include?(@region)
             raise ArgumentError, "Unknown region: #{@region.inspect}"
           end
         end

@@ -7,7 +7,7 @@ module Fog
       extend Fog::AWS::CredentialFetcher::ServiceMethods
 
       requires :aws_access_key_id, :aws_secret_access_key
-      recognizes :endpoint, :region, :host, :path, :port, :scheme, :persistent, :use_iam_profile, :aws_session_token, :aws_credentials_expire_at
+      recognizes :endpoint, :region, :host, :path, :port, :scheme, :persistent, :use_iam_profile, :aws_session_token, :aws_credentials_expire_at, :path_style
 
       secrets    :aws_secret_access_key, :hmac
 
@@ -22,12 +22,15 @@ module Fog
       request :complete_multipart_upload
       request :copy_object
       request :delete_bucket
+      request :delete_bucket_cors
       request :delete_bucket_lifecycle
       request :delete_bucket_policy
       request :delete_bucket_website
       request :delete_object
+      request :delete_multiple_objects
       request :get_bucket
       request :get_bucket_acl
+      request :get_bucket_cors
       request :get_bucket_lifecycle
       request :get_bucket_location
       request :get_bucket_logging
@@ -50,6 +53,7 @@ module Fog
       request :post_object_hidden_fields
       request :put_bucket
       request :put_bucket_acl
+      request :put_bucket_cors
       request :put_bucket_lifecycle
       request :put_bucket_logging
       request :put_bucket_policy
@@ -189,7 +193,10 @@ module Fog
                   :bucket => {},
                   :object => {}
                 },
-                :buckets => {}
+                :buckets => {},
+                :cors => {
+                  :bucket => {}
+                }
               }
             end
           end
@@ -287,6 +294,7 @@ module Fog
             @persistent = options.fetch(:persistent, false)
             @port       = options[:port]        || 443
             @scheme     = options[:scheme]      || 'https'
+            @path_style = options[:path_style]  || false
           end
           @connection = Fog::Connection.new("#{@scheme}://#{@host}:#{@port}#{@path}", @persistent, @connection_options)
         end
@@ -317,11 +325,12 @@ DATA
           string_to_sign << canonical_amz_headers
 
           subdomain = params[:host].split(".#{@host}").first
-          unless subdomain =~ /^(?:[a-z]|\d(?!\d{0,2}(?:\.\d{1,3}){3}$))(?:[a-z0-9]|\.(?![\.\-])|\-(?![\.])){1,61}[a-z0-9]$/
-            Fog::Logger.warning("fog: the specified s3 bucket name(#{subdomain}) is not a valid dns name, which will negatively impact performance.  For details see: http://docs.amazonwebservices.com/AmazonS3/latest/dev/BucketRestrictions.html")
+          valid_dns = !!(subdomain =~ /^(?:[a-z]|\d(?!\d{0,2}(?:\.\d{1,3}){3}$))(?:[a-z0-9]|\.(?![\.\-])|\-(?![\.])){1,61}[a-z0-9]$/)
+          if !valid_dns || @path_style
+            Fog::Logger.warning("fog: the specified s3 bucket name(#{subdomain}) is not a valid dns name, which will negatively impact performance.  For details see: http://docs.amazonwebservices.com/AmazonS3/latest/dev/BucketRestrictions.html") unless valid_dns
             params[:host] = params[:host].split("#{subdomain}.")[-1]
             if params[:path]
-              params[:path] = "#{subdomain}/#{params[:path]}"
+              params[:path] = "#{subdomain}/#{params[:path]}" unless subdomain == @host
             else
               params[:path] = subdomain
             end
@@ -337,6 +346,8 @@ DATA
           for key in (params[:query] || {}).keys.sort
             if %w{
               acl
+              cors
+              delete
               lifecycle
               location
               logging
@@ -391,7 +402,7 @@ DATA
           begin
             response = @connection.request(params, &block)
           rescue Excon::Errors::TemporaryRedirect => error
-            uri = URI.parse(error.response.headers['Location'])
+            uri = URI.parse(error.response.is_a?(Hash) ? error.response[:headers]['Location'] : error.response.headers['Location'])
             Fog::Logger.warning("fog: followed redirect to #{uri.host}, connecting to the matching region will be more performant")
             response = Fog::Connection.new("#{@scheme}://#{uri.host}:#{@port}", false, @connection_options).request(original_params, &block)
           end

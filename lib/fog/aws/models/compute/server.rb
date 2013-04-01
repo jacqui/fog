@@ -53,13 +53,19 @@ module Fog
         def initialize(attributes={})
           self.groups     ||= ["default"] unless (attributes[:subnet_id] || attributes[:security_group_ids])
           self.flavor_id  ||= 't1.micro'
+
+          # Old 'connection' is renamed as service and should be used instead
+          prepare_service_value(attributes)
+
           self.image_id   ||= begin
             self.username = 'ubuntu'
-            case attributes[:connection].instance_variable_get(:@region) # Ubuntu 10.04 LTS 64bit (EBS)
+            case @service.instance_variable_get(:@region) # Ubuntu 10.04 LTS 64bit (EBS)
             when 'ap-northeast-1'
               'ami-5e0fa45f'
             when 'ap-southeast-1'
               'ami-f092eca2'
+            when 'ap-southeast-2'
+              'ami-fb8611c1' # Ubuntu 12.04 LTS 64bit (EBS)
             when 'eu-west-1'
               'ami-3d1f2b49'
             when 'sa-east-1'
@@ -78,19 +84,19 @@ module Fog
         def addresses
           requires :id
 
-          connection.addresses(:server => self)
+          service.addresses(:server => self)
         end
 
         def console_output
           requires :id
 
-          connection.get_console_output(id)
+          service.get_console_output(id)
         end
 
         def destroy
           requires :id
 
-          connection.terminate_instances(id)
+          service.terminate_instances(id)
           true
         end
 
@@ -104,13 +110,13 @@ module Fog
         end
 
         def flavor
-          @flavor ||= connection.flavors.all.detect {|flavor| flavor.id == flavor_id}
+          @flavor ||= service.flavors.all.detect {|flavor| flavor.id == flavor_id}
         end
 
         def key_pair
           requires :key_name
 
-          connection.key_pairs.all(key_name).first
+          service.key_pairs.all(key_name).first
         end
 
         def key_pair=(new_keypair)
@@ -123,12 +129,12 @@ module Fog
 
         def reboot
           requires :id
-          connection.reboot_instances(id)
+          service.reboot_instances(id)
           true
         end
 
         def save
-          raise Fog::Errors::Error.new('Resaving an existing object may create a duplicate') if identity
+          raise Fog::Errors::Error.new('Resaving an existing object may create a duplicate') if persisted?
           requires :image_id
 
           options = {
@@ -164,14 +170,14 @@ module Fog
             options.delete('SubnetId')
           end
 
-          data = connection.run_instances(image_id, 1, 1, options)
+          data = service.run_instances(image_id, 1, 1, options)
           merge_attributes(data.body['instancesSet'].first)
 
           if tags = self.tags
             # expect eventual consistency
             Fog.wait_for { self.reload rescue nil }
             for key, value in (self.tags = tags)
-              connection.tags.create(
+              service.tags.create(
                 :key          => key,
                 :resource_id  => self.identity,
                 :value        => value
@@ -196,38 +202,38 @@ module Fog
           end
 
           # wait for aws to be ready
-          wait_for { sshable? }
+          wait_for { sshable?(credentials) }
 
           Fog::SSH.new(public_ip_address, username, credentials).run(commands)
         end
 
         def start
           requires :id
-          connection.start_instances(id)
+          service.start_instances(id)
           true
         end
 
         def stop(force = false)
           requires :id
-          connection.stop_instances(id, force)
+          service.stop_instances(id, force)
           true
         end
 
         def volumes
           requires :id
-          connection.volumes(:server => self)
+          service.volumes(:server => self)
         end
 
         #I tried to call it monitoring= and be smart with attributes[]
         #but in #save a merge_attribute is called after run_instance
         #thus making an un-necessary request. Use this until finding a clever solution
         def monitor=(new_monitor)
-          if identity
+          if persisted?
             case new_monitor
             when true
-              response = connection.monitor_instances(identity)
+              response = service.monitor_instances(identity)
             when false
-              response = connection.unmonitor_instances(identity)
+              response = service.unmonitor_instances(identity)
             else
               raise ArgumentError.new("only Boolean allowed here")
             end

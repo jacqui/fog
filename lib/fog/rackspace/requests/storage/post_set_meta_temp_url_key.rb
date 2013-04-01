@@ -9,7 +9,7 @@ module Fog
         #
         # Once the key has been set with this request you should create new
         # Storage objects with the :rackspace_temp_url_key option then use
-        # the get_object_https_url method to generate expirign URLs.
+        # the get_object_https_url method to generate expiring URLs.
         #
         # *** CAUTION *** changing this secret key will invalidate any expiring
         # URLS generated with old keys.
@@ -19,7 +19,10 @@ module Fog
         #
         # ==== Returns
         # * response<~Excon::Response>
-        #
+        # @raise [Fog::Rackspace::Errors::NotFound] - HTTP 404
+        # @raise [Fog::Rackspace::Errors::BadRequest] - HTTP 400
+        # @raise [Fog::Rackspace::Errors::InternalServerError] - HTTP 500
+        # @raise [Fog::Rackspace::Errors::ServiceError]
         # ==== See Also
         # http://docs.rackspace.com/files/api/v1/cf-devguide/content/Set_Account_Metadata-d1a4460.html
         def post_set_meta_temp_url_key(key)
